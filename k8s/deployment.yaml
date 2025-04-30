@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: student-survey
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: survey
+  template:
+    metadata:
+      labels:
+        app: survey
+    spec:
+      containers:
+      - name: survey
+        image: kshah1025/student-survey:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: DATABASE_URL
+          value: mysql+pymysql://kush:Password12345@swe-645.cmwmb0zaijgs.us-east-1.rds.amazonaws.com:3306/studentdb
