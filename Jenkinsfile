@@ -1,56 +1,37 @@
 pipeline {
-  agent any
+    agent any
 
-  environment {
-    DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds') // defined in Jenkins Credentials
-    DOCKER_IMAGE = "kshah1025/student-survey:latest"
-    KUBECONFIG = "$HOME/.kube/config"
-  }
-
-  stages {
-    stage('Clone Repo') {
-      steps {
-        git branch: 'main', url: 'https://github.com/Kush1025/Extra_Credit.git'
-      }
+    environment {
+        IMAGE_NAME = 'kshah1025/student-survey:latest'
     }
 
-    stage('Build Docker Image') {
-      steps {
-        sh 'docker build -t $DOCKER_IMAGE .'
-      }
-    }
-
-    stage('Login to DockerHub') {
-      steps {
-        sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
-      }
-    }
-
-    stage('Push Docker Image') {
-      steps {
-        sh 'docker push $DOCKER_IMAGE'
-      }
-    }
-
-    stage('Deploy to Kubernetes') {
-      steps {
-        withEnv(["KUBECONFIG=$KUBECONFIG"]) {
-          sh '''
-            kubectl apply -f k8s/deployment.yaml
-            kubectl apply -f k8s/service.yaml
-            kubectl rollout restart deployment student-survey
-          '''
+    stages {
+        stage('Clone Repository') {
+            steps {
+                git branch: 'main', url: 'https://github.com/your-username/student-survey-api.git'
+            }
         }
-      }
-    }
-  }
 
-  post {
-    failure {
-      echo "Pipeline failed. Check logs for details."
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t $IMAGE_NAME .'
+            }
+        }
+
+        stage('Push to DockerHub') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                    sh 'docker push $IMAGE_NAME'
+                }
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                sh 'kubectl apply -f k8s/deployment.yaml'
+                sh 'kubectl apply -f k8s/service.yaml'
+            }
+        }
     }
-    success {
-      echo "Deployment successful!"
-    }
-  }
 }
