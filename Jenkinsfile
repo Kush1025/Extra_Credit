@@ -2,35 +2,38 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = 'kshah1025/student-survey:latest'
+        DOCKER_IMAGE = 'kshah1025/student-survey:latest'
     }
 
     stages {
-        stage('Clone Repository') {
+        stage('Clone') {
             steps {
-                git branch: 'main', url: 'https://github.com/Kush1025/Extra_Credit.git'
+               git branch: 'main', credentialsId: 'github-creds', url: 'https://github.com/Kush1025/Extra.git'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t $IMAGE_NAME .'
+                script {
+                    docker.build(DOCKER_IMAGE)
+                }
             }
         }
 
-        stage('Push to DockerHub') {
+        stage('Login & Push Docker Image') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
-                    sh 'docker push $IMAGE_NAME'
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
+                    sh """
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                        docker push $DOCKER_IMAGE
+                    """
                 }
             }
         }
 
         stage('Deploy to Kubernetes') {
             steps {
-                sh 'kubectl apply -f k8s/deployment.yaml'
-                sh 'kubectl apply -f k8s/service.yaml'
+                sh 'kubectl rollout restart deployment studentsurvey'
             }
         }
     }
