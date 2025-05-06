@@ -8,7 +8,7 @@ pipeline {
     stages {
         stage('Clone') {
             steps {
-                git credentialsId: 'github-creds', url: 'https://github.com/kshah1025/student-survey-service.git'
+                git credentialsId: 'github-creds', url: 'https://github.com/Kush1025/Extra_Credit.git'
             }
         }
 
