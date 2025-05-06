@@ -8,9 +8,11 @@ pipeline {
     stages {
         stage('Clone') {
             steps {
-               git branch: 'main', credentialsId: 'github-creds', url: 'https://github.com/Kush1025/Extra_Credit.git'
+                git credentialsId: 'github-creds', url: 'https://github.com/kshah1025/student-survey-service.git'
             }
         }
+
+        
 
         stage('Build Docker Image') {
             steps {
@@ -33,7 +35,7 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             steps {
-                sh 'kubectl rollout restart deployment studentsurvey'
+                sh 'kubectl rollout restart deployment student-survey'
             }
         }
     }
