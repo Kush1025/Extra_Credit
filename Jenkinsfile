@@ -35,7 +35,7 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             steps {
-                sh 'kubectl rollout restart deployment student-survey'
+                sh 'kubectl rollout restart deployment studentsurvey'
             }
         }
     }
